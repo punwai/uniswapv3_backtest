@@ -260,9 +260,6 @@ def get_swaps_loop(pool_id, time_start='1627369200', time_end='1623772800'): # ,
 
 
 
-
-
-
 def merge_poolHourData_swaps_all(df_poolHourDatas, df_swaps_all):
     
     # Match timestamp with hour period, and assign to df_swaps_all['periodStartUnix']
@@ -281,12 +278,23 @@ def merge_poolHourData_swaps_all(df_poolHourDatas, df_swaps_all):
     # Create swaps_txCount to compare with txCount in poolHourDatas to check integrity
     df_swaps_all['swaps_txCount'] = 1
 
+    df_swaps_all['amount0_p'] = df_swaps_all['amount0'].apply(lambda x: x if x > 0 else 0)
+    df_swaps_all['amount0_n'] = df_swaps_all['amount0'].apply(lambda x: x if x <= 0 else 0)
+    df_swaps_all['amount1_p'] = df_swaps_all['amount1'].apply(lambda x: x if x > 0 else 0)
+    df_swaps_all['amount1_n'] = df_swaps_all['amount1'].apply(lambda x: x if x <= 0 else 0)
+    
+    
     # Groupby->Sum based on periodStartUnix, specify columns to sum at GROUPBY_COLS
-    GROUPBY_COLS = ['periodStartUnix','amount0', 'amount1', 'amountUSD', 'swaps_txCount']
+    GROUPBY_COLS = ['periodStartUnix','amount0', 'amount1', 
+                    'amount0_p', 'amount0_n', 'amount1_p', 'amount1_n',
+                    'amountUSD', 'swaps_txCount']
     df_swaps_to_merge = df_swaps_all[GROUPBY_COLS]
     df_swaps_to_merge = df_swaps_to_merge.astype({'periodStartUnix': 'int',
                                                  'amount0':'float','amount1':'float', 
+                                                  'amount0_p':'float','amount0_n':'float',
+                                                  'amount1_p':'float', 'amount1_n':'float',
                                                   'amountUSD':'float', 'swaps_txCount':'int'})
+
     df_swaps_to_merge = df_swaps_to_merge.groupby(by=['periodStartUnix']).sum()
 
     # Merge df_swaps_all (groupby) with df_poolHourDatas
@@ -302,8 +310,8 @@ def merge_poolHourData_swaps_all(df_poolHourDatas, df_swaps_all):
 def get_data(token0, token1, feeTier):
     
     # Indicate Tokens and FeeTier
-    token0_id = get_token_id(TOKEN0)
-    token1_id = get_token_id(TOKEN1)
+    token0_id = get_token_id(token0)
+    token1_id = get_token_id(token1)
     pool_id = get_pool_id(token0_id, token1_id, feeTier)
 
     # Get poolHourDatas
@@ -317,7 +325,7 @@ def get_data(token0, token1, feeTier):
     df_swaps_all = get_swaps_loop(pool_id, time_start, time_end) # ,  num_datapoints= 150000
     
     # Saving settings
-    SETTINGS = '{}-{}-{}-timestamp-{}-{}.csv'.format(TOKEN0, TOKEN1, feeTier, time_start, time_end)
+    SETTINGS = '{}-{}-{}-timestamp-{}-{}.csv'.format(token0, token1, feeTier, time_start, time_end)
     df_swaps_all.to_csv('../data/df_swaps_all_'+SETTINGS)
     df_poolHourDatas.to_csv('../data/df_poolHourDatas_'+SETTINGS)
     
