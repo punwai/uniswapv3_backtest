@@ -259,15 +259,15 @@ def get_swaps_loop(pool_id, time_start='1627369200', time_end='1623772800'): # ,
 
 
 
+# Match timestamp with hour period, and assign to df_swaps_all['periodStartUnix']
+def compute_periodStartUnix(row_):
+    return row_['timestamp'] - (row_['timestamp'] % 3600)
+def compute_periodEndUnix(row_):
+    return row_['periodStartUnix'] + 3600
+
 
 def merge_poolHourData_swaps_all(df_poolHourDatas, df_swaps_all):
     
-    # Match timestamp with hour period, and assign to df_swaps_all['periodStartUnix']
-    def compute_periodStartUnix(row_):
-        return row_['timestamp'] - (row_['timestamp'] % 3600)
-    def compute_periodEndUnix(row_):
-        return row_['periodStartUnix'] + 3600
-
     df_swaps_all['timestamp'] = df_swaps_all['timestamp'].astype(int)    
     df_swaps_all['periodStartUnix'] = df_swaps_all.apply(lambda row: compute_periodStartUnix(row), axis=1)                       
     df_swaps_all['periodEndUnix'] = df_swaps_all.apply(lambda row: compute_periodEndUnix(row), axis=1)                       
@@ -296,15 +296,21 @@ def merge_poolHourData_swaps_all(df_poolHourDatas, df_swaps_all):
                                                  'amount0':'float','amount1':'float', 
                                                   'amount0_p':'float','amount0_n':'float',
                                                   'amount1_p':'float', 'amount1_n':'float',
-                                                  'amountUSD':'float', 'swaps_txCount':'int'})
+                                                  'amountUSD':'float', 'swaps_txCount':'int',
+                                                  })
 
     df_swaps_to_merge = df_swaps_to_merge.groupby(by=['periodStartUnix']).sum()
 
     # Merge df_swaps_all (groupby) with df_poolHourDatas
     df_poolHourDatas['periodStartUnix'] = df_poolHourDatas['periodStartUnix'].astype(int)
     df_merged = df_poolHourDatas.merge(df_swaps_to_merge, how='left', on='periodStartUnix')
+
     df_merged['txCount'] = df_merged['txCount'].astype(int)
-    
+    # df_merged['tick'] = df_merged['tick'].astype(int)
+    # df_merged['liquidity'] = df_merged['liquidity'].astype(float)
+    # df_merged['tick'] = df_merged['tick'].to_numeric()
+    # df_merged['liquidity'] = df_merged['liquidity'].to_numeric()
+
     return df_merged
 
 
