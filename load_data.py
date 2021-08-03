@@ -311,6 +311,13 @@ def merge_poolHourData_swaps_all(df_poolHourDatas, df_swaps_all):
     # df_merged['tick'] = df_merged['tick'].to_numeric()
     # df_merged['liquidity'] = df_merged['liquidity'].to_numeric()
 
+    # move this code to load_data.py's merge_pool_hour_swaps_data()
+    df_merged['feeGrowthGlobal0X128'] = df_merged['feeGrowthGlobal0X128'].astype(float)
+    df_merged['feeGrowthGlobal1X128'] = df_merged['feeGrowthGlobal1X128'].astype(float)
+    # calculate fees accumulated during that hour time frame
+    df_merged['feeGrowthGlobal0X128_hour'] = df_merged['feeGrowthGlobal0X128'].diff(periods=-1).shift(1)
+    df_merged['feeGrowthGlobal1X128_hour'] = df_merged['feeGrowthGlobal1X128'].diff(periods=-1).shift(1)
+
     return df_merged
 
 
