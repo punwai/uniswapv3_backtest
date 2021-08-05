@@ -1,0 +1,15 @@
+
+
+JNP_IL_calculation.ipynb
+load_data.ipynb
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+.ipynb_checkpoints
+
+# Random Text Files
+*.rtf
+
+
+
